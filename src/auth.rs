@@ -126,7 +126,7 @@ pub async fn get_token(scopes: &[&str], account: Option<&str>) -> anyhow::Result
 /// 1. Explicit `account` parameter takes priority.
 /// 2. Fall back to `accounts.json` default.
 /// 3. If no registry exists, return None to allow legacy `credentials.enc` fallthrough.
-fn resolve_account(account: Option<&str>) -> anyhow::Result<Option<String>> {
+pub fn resolve_account(account: Option<&str>) -> anyhow::Result<Option<String>> {
     let registry = crate::accounts::load_accounts()?;
 
     match (account, &registry) {

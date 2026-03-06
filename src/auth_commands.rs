@@ -144,6 +144,8 @@ pub async fn handle_auth_command(args: &[String]) -> Result<(), GwsError> {
         "           --project        Use a specific GCP project\n",
         "  status   Show current authentication state\n",
         "  export   Print decrypted credentials to stdout\n",
+        "           --unmasked       Do not mask secrets in the output\n",
+        "           --account EMAIL  Export a specific account (otherwise: default)\n",
         "  logout   Clear saved credentials and token cache\n",
         "           --account EMAIL  Logout a specific account (otherwise: all)\n",
         "  list     List all registered accounts\n",
@@ -161,10 +163,7 @@ pub async fn handle_auth_command(args: &[String]) -> Result<(), GwsError> {
         "login" => handle_login(&args[1..]).await,
         "setup" => crate::setup::run_setup(&args[1..]).await,
         "status" => handle_status().await,
-        "export" => {
-            let unmasked = args.len() > 1 && args[1] == "--unmasked";
-            handle_export(unmasked).await
-        }
+        "export" => handle_export(&args[1..]).await,
         "logout" => handle_logout(&args[1..]),
         "list" => handle_list(),
         "default" => handle_default(&args[1..]),
@@ -463,15 +462,37 @@ async fn fetch_userinfo_email(access_token: &str) -> Option<String> {
         .map(|s| s.to_string())
 }
 
-async fn handle_export(unmasked: bool) -> Result<(), GwsError> {
-    let enc_path = credential_store::encrypted_credentials_path();
+async fn handle_export(args: &[String]) -> Result<(), GwsError> {
+    let unmasked = args.iter().any(|a| a == "--unmasked");
+    let mut account_email = None;
+    for i in 0..args.len() {
+        if args[i] == "--account" && i + 1 < args.len() {
+            account_email = Some(args[i + 1].clone());
+        } else if let Some(value) = args[i].strip_prefix("--account=") {
+            account_email = Some(value.to_string());
+        }
+    }
+
+    let resolved = crate::auth::resolve_account(account_email.as_deref())
+        .map_err(|e| GwsError::Auth(format!("Account error: {e}")))?;
+
+    let enc_path = match resolved {
+        Some(email) => credential_store::encrypted_credentials_path_for(&email),
+        None => credential_store::encrypted_credentials_path(),
+    };
+
     if !enc_path.exists() {
         return Err(GwsError::Auth(
             "No encrypted credentials found. Run 'gws auth login' first.".to_string(),
         ));
     }
 
-    match credential_store::load_encrypted() {
+    let result = match resolved {
+        Some(email) => credential_store::load_encrypted_for(&email),
+        None => credential_store::load_encrypted(),
+    };
+
+    match result {
         Ok(contents) => {
             if unmasked {
                 println!("{contents}");
