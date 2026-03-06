@@ -15,10 +15,12 @@
 use super::Helper;
 pub mod send;
 pub mod triage;
+pub mod unsubscribe;
 pub mod watch;
 
 use send::handle_send;
 use triage::handle_triage;
+use unsubscribe::handle_unsubscribe;
 use watch::handle_watch;
 
 pub(super) use crate::auth;
@@ -197,6 +199,54 @@ TIPS:
                 ),
         );
 
+        cmd = cmd.subcommand(
+            Command::new("+unsubscribe")
+                .about("[Helper] One-click mailing list unsubscribe (RFC 8058)")
+                .arg(
+                    Arg::new("list")
+                        .long("list")
+                        .help("List unsubscribe candidates grouped by sender")
+                        .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("from")
+                        .long("from")
+                        .help("Unsubscribe from this sender")
+                        .value_name("SENDER"),
+                )
+                .arg(
+                    Arg::new("max")
+                        .long("max")
+                        .help("Maximum messages to scan (default: 50)")
+                        .default_value("50")
+                        .value_name("N"),
+                )
+                .arg(
+                    Arg::new("query")
+                        .long("query")
+                        .help("Gmail search query (default: has:unsubscribe)")
+                        .value_name("QUERY"),
+                )
+                .arg(
+                    Arg::new("dry-run")
+                        .long("dry-run")
+                        .help("Show what would be done without executing")
+                        .action(ArgAction::SetTrue),
+                )
+                .after_help(
+                    "\
+EXAMPLES:
+  gws gmail +unsubscribe --list
+  gws gmail +unsubscribe --list --max 200
+  gws gmail +unsubscribe --from 'noreply@example.com'
+  gws gmail +unsubscribe --from 'noreply@example.com' --dry-run
+
+TIPS:
+  Uses RFC 8058 one-click unsubscribe when available.
+  Falls back to showing mailto/URL for manual unsubscribe.",
+                ),
+        );
+
         cmd
     }
 
@@ -219,6 +269,11 @@ TIPS:
 
             if let Some(matches) = matches.subcommand_matches("+watch") {
                 handle_watch(matches, sanitize_config).await?;
+                return Ok(true);
+            }
+
+            if let Some(matches) = matches.subcommand_matches("+unsubscribe") {
+                handle_unsubscribe(matches).await?;
                 return Ok(true);
             }
 
