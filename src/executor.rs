@@ -145,6 +145,7 @@ async fn build_http_request(
     page_token: Option<&str>,
     pages_fetched: u32,
     upload_path: Option<&str>,
+    upload_type: Option<&str>,
 ) -> Result<reqwest::RequestBuilder, GwsError> {
     let mut request = match method.http_method.as_str() {
         "GET" => client.get(&input.full_url),
@@ -184,10 +185,24 @@ async fn build_http_request(
                 ))
             })?;
 
-            request = request.query(&[("uploadType", "multipart")]);
-            let (multipart_body, content_type) = build_multipart_body(&input.body, &file_bytes)?;
-            request = request.header("Content-Type", content_type);
-            request = request.body(multipart_body);
+            // If user explicitly specified uploadType=media (or passed --upload-type)
+            let explicit_media = input.query_params.iter().any(|(k, v)| k == "uploadType" && v == "media");
+            let is_eml = upload_path.ends_with(".eml");
+
+            if explicit_media || is_eml || upload_type.is_some() {
+                // Media upload (raw bytes)
+                request = request.query(&[("uploadType", "media")]);
+                let mime = upload_type
+                    .unwrap_or_else(|| if is_eml { "message/rfc822" } else { "application/octet-stream" });
+                request = request.header("Content-Type", mime);
+                request = request.body(file_bytes);
+            } else {
+                // Multipart upload
+                request = request.query(&[("uploadType", "multipart")]);
+                let (multipart_body, content_type) = build_multipart_body(&input.body, &file_bytes)?;
+                request = request.header("Content-Type", content_type);
+                request = request.body(multipart_body);
+            }
         } else if let Some(ref body_val) = input.body {
             request = request.header("Content-Type", "application/json");
             request = request.json(body_val);
@@ -362,6 +377,7 @@ pub async fn execute_method(
     auth_method: AuthMethod,
     output_path: Option<&str>,
     upload_path: Option<&str>,
+    upload_type: Option<&str>,
     dry_run: bool,
     pagination: &PaginationConfig,
     sanitize_template: Option<&str>,
@@ -405,6 +421,7 @@ pub async fn execute_method(
             page_token.as_deref(),
             pages_fetched,
             upload_path,
+            upload_type,
         )
         .await?;
 

@@ -97,8 +97,9 @@ TIPS:
                     Some(&body_str),
                     token.as_deref(),
                     auth_method,
-                    None,
-                    None,
+                    None, // output_path
+                    None, // upload_path
+                    None, // upload_type
                     matches.get_flag("dry-run"),
                     &pagination,
                     None,

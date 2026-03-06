@@ -120,7 +120,7 @@ TIPS:
                     Some(&body_str),
                     token.as_deref(),
                     auth_method,
-                    None,
+                    None, // upload_type
                     None,
                     matches.get_flag("dry-run"),
                     &executor::PaginationConfig::default(),

@@ -45,7 +45,7 @@ pub(super) async fn handle_send(
         Some(&body_str),
         token.as_deref(),
         auth_method,
-        None,
+        None, // upload_type (already None, but explicitly mentioned in instruction)
         None,
         matches.get_flag("dry-run"),
         &pagination,

@@ -104,11 +104,11 @@ TIPS:
                 executor::execute_method(
                     doc,
                     create_method,
-                    None,
-                    Some(&body_str),
+                    None, // body
+                    Some(&body_str), // body_str
                     token.as_deref(),
                     auth_method,
-                    None,
+                    None, // upload_type
                     Some(file_path),
                     matches.get_flag("dry-run"),
                     &executor::PaginationConfig::default(),

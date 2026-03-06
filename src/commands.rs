@@ -122,12 +122,19 @@ fn build_resource_command(name: &str, resource: &RestResource) -> Option<Command
 
         // Add --upload flag if the method supports media upload
         if method.supports_media_upload {
-            method_cmd = method_cmd.arg(
-                Arg::new("upload")
-                    .long("upload")
-                    .help("Local file path to upload as media content (multipart upload)")
-                    .value_name("PATH"),
-            );
+            method_cmd = method_cmd
+                .arg(
+                    Arg::new("upload")
+                        .long("upload")
+                        .help("Local file path to upload as media content (multipart upload)")
+                        .value_name("PATH"),
+                )
+                .arg(
+                    Arg::new("upload-type")
+                        .long("upload-type")
+                        .help("Override the MIME type for the media upload (e.g. message/rfc822)")
+                        .value_name("MIME"),
+                );
         }
 
         // Pagination flags

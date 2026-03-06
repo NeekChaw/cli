@@ -834,6 +834,7 @@ async fn execute_mcp_method(
         auth_method,
         None,
         upload_path,
+        None, // upload_type
         false,
         &pagination,
         None,

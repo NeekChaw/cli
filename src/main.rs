@@ -215,14 +215,34 @@ async fn run() -> Result<(), GwsError> {
     let (method, matched_args) = resolve_method_from_matches(&doc, &matches)?;
 
     let params_json = matched_args.get_one::<String>("params").map(|s| s.as_str());
-    let body_json = matched_args
-        .try_get_one::<String>("json")
-        .ok()
-        .flatten()
-        .map(|s| s.as_str());
+    
+    let mut resolved_body_json: Option<String> = None;
+    if let Some(json_val) = matched_args.try_get_one::<String>("json").ok().flatten() {
+        if json_val.starts_with('@') {
+            let path = &json_val[1..];
+            resolved_body_json = Some(tokio::fs::read_to_string(path).await.map_err(|e| {
+                GwsError::Validation(format!("Failed to read JSON from file '{}': {}", path, e))
+            })?);
+        } else if json_val == "-" {
+            let mut stdin = String::new();
+            std::io::Read::read_to_string(&mut std::io::stdin(), &mut stdin).map_err(|e| {
+                GwsError::Validation(format!("Failed to read JSON from stdin: {}", e))
+            })?;
+            resolved_body_json = Some(stdin);
+        }
+    }
+    
+    let body_json_raw = matched_args.try_get_one::<String>("json").ok().flatten().map(|s| s.as_str());
+    let body_json = resolved_body_json.as_deref().or(body_json_raw);
+
     let output_path = matched_args.get_one::<String>("output").map(|s| s.as_str());
     let upload_path = matched_args
         .try_get_one::<String>("upload")
+        .ok()
+        .flatten()
+        .map(|s| s.as_str());
+    let upload_type = matched_args
+        .try_get_one::<String>("upload-type")
         .ok()
         .flatten()
         .map(|s| s.as_str());
@@ -264,6 +284,7 @@ async fn run() -> Result<(), GwsError> {
         auth_method,
         output_path,
         upload_path,
+        upload_type,
         dry_run,
         &pagination,
         sanitize_config.template.as_deref(),
@@ -429,8 +450,9 @@ fn print_usage() {
     println!();
     println!("FLAGS:");
     println!("    --params <JSON>       URL/Query parameters as JSON");
-    println!("    --json <JSON>         Request body as JSON (POST/PATCH/PUT)");
+    println!("    --json <JSON|@FILE|-> Request body as JSON (reads from string, file, or stdin)");
     println!("    --upload <PATH>       Local file to upload as media content (multipart)");
+    println!("    --upload-type <MIME>  Override MIME type for media upload (e.g. message/rfc822)");
     println!("    --output <PATH>       Output file path for binary responses");
     println!("    --format <FMT>        Output format: json (default), table, yaml, csv");
     println!("    --api-version <VER>   Override the API version (e.g., v2, v3)");
