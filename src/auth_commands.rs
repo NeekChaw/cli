@@ -51,6 +51,7 @@ pub const MINIMAL_SCOPES: &[&str] = &[
     "https://www.googleapis.com/auth/documents",
     "https://www.googleapis.com/auth/presentations",
     "https://www.googleapis.com/auth/tasks",
+    "https://www.googleapis.com/auth/chat.messages",
 ];
 
 /// Default scopes for login.  Alias for [`MINIMAL_SCOPES`] — deliberately kept
@@ -76,6 +77,7 @@ pub const FULL_SCOPES: &[&str] = &[
     "https://www.googleapis.com/auth/documents",
     "https://www.googleapis.com/auth/presentations",
     "https://www.googleapis.com/auth/tasks",
+    "https://www.googleapis.com/auth/chat.messages",
     "https://www.googleapis.com/auth/pubsub",
     "https://www.googleapis.com/auth/cloud-platform",
 ];
@@ -89,6 +91,7 @@ const READONLY_SCOPES: &[&str] = &[
     "https://www.googleapis.com/auth/documents.readonly",
     "https://www.googleapis.com/auth/presentations.readonly",
     "https://www.googleapis.com/auth/tasks.readonly",
+    "https://www.googleapis.com/auth/chat.spaces.readonly",
 ];
 
 pub fn config_dir() -> PathBuf {
