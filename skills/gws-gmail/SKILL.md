@@ -25,6 +25,7 @@ gws gmail <resource> <method> [flags]
 | [`+send`](../gws-gmail-send/SKILL.md) | Send an email |
 | [`+triage`](../gws-gmail-triage/SKILL.md) | Show unread inbox summary (sender, subject, date) |
 | [`+watch`](../gws-gmail-watch/SKILL.md) | Watch for new emails and stream them as NDJSON |
+| [`+unsubscribe`](../gws-gmail-unsubscribe/SKILL.md) | One-click mailing list unsubscribe (RFC 8058) |
 
 ## API Resources
 

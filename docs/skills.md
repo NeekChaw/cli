@@ -47,6 +47,7 @@ Shortcut commands for common operations.
 | [gws-gmail-send](../skills/gws-gmail-send/SKILL.md) | Gmail: Send an email. |
 | [gws-gmail-triage](../skills/gws-gmail-triage/SKILL.md) | Gmail: Show unread inbox summary (sender, subject, date). |
 | [gws-gmail-watch](../skills/gws-gmail-watch/SKILL.md) | Gmail: Watch for new emails and stream them as NDJSON. |
+| [gws-gmail-unsubscribe](../skills/gws-gmail-unsubscribe/SKILL.md) | Gmail: One-click mailing list unsubscribe (RFC 8058). |
 | [gws-calendar-insert](../skills/gws-calendar-insert/SKILL.md) | Google Calendar: Create a new event. |
 | [gws-calendar-agenda](../skills/gws-calendar-agenda/SKILL.md) | Google Calendar: Show upcoming events across all calendars. |
 | [gws-docs-write](../skills/gws-docs-write/SKILL.md) | Google Docs: Append text to a document. |
